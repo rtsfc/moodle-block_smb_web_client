@@ -2,14 +2,14 @@
 
 $smb_cfg=new stdClass;
 
-$smb_cfg->cfgWebserverType='windows'; // linux or windows - os on your webserver, not your file server!
+$smb_cfg->cfgWebserverType='linux'; // linux or windows - os on your webserver, not your file server!
 
 ###################################################################
 # String to prefix username - this is useful if you have your
 # shares on a different server to your domain controller and your
 # usernames need to be passed as domain/username
 
-# $smb_cfg->cfgUserPrefix='domain/'; // try this commented out first!
+$smb_cfg->cfgUserPrefix='tauntons\\\\'; // try this commented out first!
 
 
 ###################################################################
@@ -19,19 +19,20 @@ $smb_cfg->cfgWebserverType='windows'; // linux or windows - os on your webserver
 # in a share string with mydom/myserver
 
 $smb_cfg->cfgWinShareToSmb=array(
-    //'\\10.0.0.50'=>'GUY-Q430/10.0.0.50'
-	'\\10.0.0.61'=>'GUY-LAPTOP/10.0.0.61'
+//    '\\127.0.0.1'=>'WORKGROUP/127.0.0.1',
+//	'\\10.0.0.61'=>'GUY-LAPTOP/10.0.0.61',
+//	'\\192.168.40.3'=>'GUY-LAPTOP/192.168.40.3'
 );
 
 
 
 // new code block for shares - JWI
 ###################################################################
-# Arrays of shares ( other than home directory ) and the courses 
-# they can be shown in.  This is to allow administrators to put 
+# Arrays of shares ( other than home directory ) and the courses
+# they can be shown in.  This is to allow administrators to put
 # access to certain shares in certain courses only
 # e.g.
-# 
+#
 #$smb_cfg->cfgWinShares=array(
 #    'share1'=>array(
 #        'share'=>'admindomain/server1/staff', // windows share
@@ -42,7 +43,7 @@ $smb_cfg->cfgWinShareToSmb=array(
 #        'share'=>'studentdomain/srv1/studentshared', // windows share
 #        'title'=>'Student Public Area', // title of share in block
 #        'courses'=>array(1, 5) // applicable courses (ids)
-#    )    
+#    )
 #);
 #
 # NOTE: The convention for specifying your share is domain/server/share - NO LEADING OR TRAILING SLASHES!
@@ -50,14 +51,30 @@ $smb_cfg->cfgWinShareToSmb=array(
 
 // populate this as in example above
 $smb_cfg->cfgWinShares=array(
-    'share1'=>array(
-        'share'=>'GUY-LAPTOP/10.0.0.61/shared', // windows share
-        'title'=>'Staff Shared Area' // title of share in block
+    'I'=>array(
+        'share'=>'//fs1/Curriculum', // windows share
+        'title'=>'Curriculum (I:\)' // title of share in block
     ),
-	'share2'=>array(
-        'share'=>'GUY-Q430/10.0.0.50/Documents', // windows share
-        'title'=>'Documents' // title of share in block
-    )	
+    'G'=>array(
+        'share'=>'//fs1/General', // windows share
+        'title'=>'General (G:\)',
+       'courses'=>array(2422) // title of share in block
+   ),
+    'K'=>array(
+        'share'=>'//fs1/srv-admin06',
+        'title'=>'admin06 (K:\)',
+        'courses'=>array(2422)
+    ),
+    'P'=>array(
+        'share'=>'//fshomes1/mis',
+        'title'=>'MIS (P:\)',
+        'courses'=>array(2422)
+    ),
+    'Z'=>array(
+        'share'=>'//fs1/old servers/srv-admin06/Users/Public',
+        'title'=>'Old Data (Z:\)',
+        'courses'=>array(2422)
+    )
 );
 
 // if set to true then display all shares on site page providing user has access to any course specific shares
@@ -98,7 +115,7 @@ $smb_cfg->cfgCachePath = false;
 # language is not supported you can set a default language.
 
 $smb_cfg->cfgDefaultLanguage = 'en';
- 
+
 
 ###################################################################
 # Default charset (as suggested by Norbert Malecki)
@@ -121,10 +138,10 @@ $smb_cfg->cfgDefaultServer = 'localhost';
 # i.e. $smb_cfg->cfgSmbClient = '/usr/bin/smbclient';
 
 // windows servers - set as below
- $smb_cfg->cfgSmbClient = 'C:\cygwin\bin\smbclient';
+// $smb_cfg->cfgSmbClient = 'C:\cygwin\bin\smbclient';
 
 // linux servers - set as below
-// $smb_cfg->cfgSmbClient = 'smbclient';
+$smb_cfg->cfgSmbClient = 'smbclient';
 
 
 ###################################################################
@@ -133,7 +150,7 @@ $smb_cfg->cfgDefaultServer = 'localhost';
 # 'SMB_AUTH_ARG' smbclient -U param
 # 'SMB_AUTH_ARG_WIN' - as above but for running on a windows web server server (not file server!)
 
-$smb_cfg->cfgAuthMode = 'SMB_AUTH_ARG_WIN';
+$smb_cfg->cfgAuthMode = 'SMB_AUTH_ARG';
 
 
 ###################################################################
@@ -177,7 +194,7 @@ $smb_cfg->cfgHideSystemShares = true;
 # Do not show printer resources
 #
 
-$smb_cfg->cfgHidePrinterShares = false;
+$smb_cfg->cfgHidePrinterShares = true;
 
 
 ###################################################################
@@ -219,11 +236,11 @@ $smb_cfg->cfgSessionName = 'SMBWebClientID';
 #
 # $smb_cfg->cfgAntivirus = 'ClamAV';
 
-$smb_cfg->cfgAntivirus = false;
+$smb_cfg->cfgAntivirus = 'ClamAV';
 
 
 ###################################################################
-# Format to upload compressed folders: tar, tgz or zip 
+# Format to upload compressed folders: tar, tgz or zip
 #
 # $smb_cfg->cfgArchiver = 'tgz';
 
@@ -240,7 +257,7 @@ $smb_cfg->cfgInlineFiles = false;
 ###################################################################
 # Enable specific field to be used to retreive home directory
 # Default = homeDirectory (standard for AD)
-$smb_cfg->cfgHomeDirField = '';
+$smb_cfg->cfgHomeDirField = 'homeDirectory';
 
 ###################################################################
 # IE users have a problem when selecting 'open' for office files
@@ -253,7 +270,7 @@ $smb_cfg->cfgIEProtectMsOffice=true;
 
 ###################################################################
 # Forces https protocol if set to true
-$smb_cfg->cfgssl=false;
+$smb_cfg->cfgssl=true;
 
 ###################################################################
 # Skips -N command line parameter (don't prompt for password)
@@ -268,5 +285,10 @@ $smb_cfg->cfgssl=false;
 # http://ubuntuforums.org/archive/index.php/t-909020.html
 # OR - use Ubuntu 8.4 instead (works OK out of the box)
 #
-$smb_cfg->cfgSkipNoPwdParam=false;
+$smb_cfg->cfgSkipNoPwdParam=true;
+
+// Local hacks to change set Home paths for staff and students
+$smb_cfg->cfgLdapStaffDn = 'CN=Staff,OU=Staff Groups,OU=Staff,OU=Tauntons Users,DC=tauntons,DC=internal';
+$smb_cfg->cfgStaffHomeRoot = '\\\\fshomes1\\homes$\\staff\\';
+$smb_cfg->cfgStudentHomeRoot = '\\\\fshomes2\\homes$\\';
 ?>

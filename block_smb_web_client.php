@@ -3,7 +3,7 @@
 /**
  *==============================================================
  * Author: Guy Thomas
- * (c) Moodle Block - Guy Thomas Ossett School 2007, 2008, 2009, 2010
+ * (c) Moodle Block - Guy Thomas (Ossett School 2007, 2008, 2009, 2010), (Citricity Ltd 2011)
  * (c) Original Smb Web Client - Victor M. Varela 2005
  * Title: Block Smb Web Client
  * Description:
@@ -16,6 +16,13 @@
  *==============================================================
  *
  * Change log:
+ * Version 2011081001 - fixed page context issue
+ *                      fixed home directory problem by switching to ldap_get_entries_moodle function
+ * Version 2011081000 - fixed issue with windows files with spaces
+ *                      also works with new Moodle 2 ldap authentication plugin using aes encryption library
+ *
+ * Version 2011071800 - now works with Moodle 2
+ *
  * Version 2011021900 - now works with windows servers! (see instructions at www.citricity.com)
  *
  * Version 2010090700
@@ -122,9 +129,9 @@ class block_smb_web_client extends block_base {
     function init() {
         global $CFG, $smb_cfg;
 
-        // Set title
-        $this->title = get_string('pluginname', 'block_smb_web_client');
-        $this->title = $this->title == "[[blockmenutitle]]" ? get_string('pluginname', 'block_smb_web_client') : $this->title;
+        // Set title and version
+        $this->title = get_string('blockmenutitle', 'block_smb_web_client');
+        $this->title = $this->title == "[[blockmenutitle]]" ? "Windows Share Web Client" : $this->title;
 
         // set block dir
         $this->blockdir=$CFG->dirroot.'/blocks/smb_web_client';
@@ -133,7 +140,7 @@ class block_smb_web_client extends block_base {
     }
 
     function get_content() {
-        global $CFG, $USER, $COURSE, $DB, $smb_cfg;
+        global $CFG, $USER, $COURSE, $CONTENT, $smb_cfg, $DB;
 
         // return content if allready set
         if ($this->content !== NULL) {
@@ -148,9 +155,9 @@ class block_smb_web_client extends block_base {
         if (!isset($smb_cfg)){
             // GT mod 2008/12/19 - report different error if file exists but config variable not set
             if (file_exists($this->blockdir.'/config_smb_web_client.php')){
-                $this->content->text=notify(get_string('configerror', 'block_smb_web_client') ,'notifyproblem','center',true);
+                $this->content->text=notify('Configuration for this block has errors!','notifyproblem','center',true);
             } else {
-                $this->content->text=notify(get_string('configincomplete', 'block_smb_web_client'),'notifyproblem','center',true);
+                $this->content->text=notify('Configuration for this block has not been completed!','notifyproblem','center',true);
             }
             return;
         }
@@ -162,7 +169,7 @@ class block_smb_web_client extends block_base {
 
 
         //EMC mod to only show for logged in users!
-        if (!isloggedin() || isguest()) {
+        if (!isloggedin()) {
             return false;
         }
         //END EMC mod
@@ -172,7 +179,7 @@ class block_smb_web_client extends block_base {
         if ($USER->auth!='manual'){
             // get home directory string from language file
             $homedirstr=get_string('homedir', 'block_smb_web_client');
-            $homedirstr=$homedirstr=="[[homedir]]" ? get_string('homedir', 'block_smb_web_client') : $this->title;
+            $homedirstr=$homedirstr=="[[homedir]]" ? "My Home Directory" : $this->title;
             $shareurl=$this->blockwww.'/smbwebclient_moodle.php?sesskey='.$USER->sesskey.'&amp;share=__home__';
 
             // modify shareurl to use ssl if necessary
@@ -181,7 +188,7 @@ class block_smb_web_client extends block_base {
             }
 
             // add home directory link to block content
-            $this->content->text = '<a href="#" onclick="window.open(\''.$shareurl.'\',\''.$this->nice_popup_title($homedirstr).'\',\'width=640,height=480, scrollbars=1, resizable=1\'); return false;"><img src="'.$this->blockwww.'/pix/folder_home.png" alt="'.get_string('homefolder', 'block_smb_web_client').'"/> '.$homedirstr.'</a>';
+            $this->content->text = '<a href="#" onclick="window.open(\''.$shareurl.'\',\''.$this->nice_popup_title($homedirstr).'\',\'width=640,height=480, scrollbars=1, resizable=1\'); return false;"><img src="'.$this->blockwww.'/pix/folder_home.png" alt="Home Folder"/> '.$homedirstr.'</a>';
         }
         // END GT Mod
 
@@ -204,7 +211,7 @@ class block_smb_web_client extends block_base {
                             if (is_int($courseid)){
 
                                 // Get course
-                                $course = $DB->get_record('course', array('id' => $courseid));
+                                $course=$DB->get_record('course', array('id' => $courseid));
 
                                 $ci=false;
                                 if ($course){
@@ -214,7 +221,7 @@ class block_smb_web_client extends block_base {
                                 }
 
                                 // Check capabilities
-                                if ($ci && ($COURSE->id==$courseid || has_capability('moodle/course:view', $ci))){
+                                if ($ci && ($COURSE->id==$courseid || has_capability('moodle/course:enrolled', $ci))){
 
                                     // Add share to content
                                     $this->addshare($share_key, $share_arr);
@@ -244,7 +251,10 @@ class block_smb_web_client extends block_base {
     * Add share to block
     */
     private function addshare($share_key, $share_arr){
-        global $CFG, $USER, $smb_cfg;
+        global $CFG, $USER, $OUTPUT, $smb_cfg;
+
+
+
         $shareurl=$this->blockwww.'/smbwebclient_moodle.php?sesskey='.$USER->sesskey.'&amp;share='.$share_key;
 
         // GT Mod 2009031700 force https protocol if necessary
@@ -252,8 +262,9 @@ class block_smb_web_client extends block_base {
             $shareurl=str_ireplace('http://', 'https://', $shareurl);
         }
 
+
         $this->content->text.=$this->content->text!='' ? '<br />' : '';
-        $this->content->text.='<a href="#" onclick="window.open(\''.$shareurl.'\',\''.$this->nice_popup_title($share_arr['title']).'\',\'width=640,height=480, scrollbars=1, resizable=1\'); return false;"><img src="'.$CFG->pixpath.'/f/folder.gif" alt="'.$share_arr['title'].'" /> '.$share_arr['title'].'</a>';
+        $this->content->text.='<a href="#" onclick="window.open(\''.$shareurl.'\',\''.$this->nice_popup_title($share_arr['title']).'\',\'width=640,height=480, scrollbars=1, resizable=1\'); return false;"><img src="'.$OUTPUT->pix_url('f/folder').'" alt="'.$share_arr['title'].'" /> '.$share_arr['title'].'</a>';
     }
 
     /**
@@ -261,13 +272,13 @@ class block_smb_web_client extends block_base {
     * @param required $str - the title you want to make friendly to ie
     */
     private function nice_popup_title($str){
-    	$bannedChars=array(" ", "*", "{", "}", "(", ")", "<", ">", "[", "]", "=", "+", "\"", "\\", "/", ",",".",":",";");
+        $bannedChars=array(" ", "*", "{", "}", "(", ")", "<", ">", "[", "]", "=", "+", "\"", "\\", "/", ",",".",":",";");
 
-    	foreach ($bannedChars as $banned){
+        foreach ($bannedChars as $banned){
             $str=str_replace($banned,"_", $str);
-    	}
+        }
 
-    	return ($str);
+        return ($str);
 
     }
 

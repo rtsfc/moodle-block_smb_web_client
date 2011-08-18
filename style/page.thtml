@@ -11,8 +11,8 @@
 	<link rel="stylesheet" media="all" type="text/css" href="{baseurl}/style/main.css" />    
 	<style type="text/css">
 	<!--
-    
-		a.folder{background-image:url({pixpath}/f/folder.gif) !important;}   
+
+		a.folder{background-image:url({folderimg}) !important;}
 		body, table { color: black; background: white; font-size: 8pt; font-family: Tahoma, Arial, Helvetica; margin-top: 0px; margin-left: 0px; margin-right: 0px; width: 100%; }
 		input, select { font-size: 8pt; }
 		a { color: black; text-decoration: none; padding-left: 3px; padding-right: 3px; }

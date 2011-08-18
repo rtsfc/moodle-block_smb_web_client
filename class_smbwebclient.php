@@ -205,7 +205,7 @@ function Run ()
         $this->DumpInlineFile($path);
         exit;
     }
-
+	
     $this->Go(preg_replace('/\/$/','',preg_replace('/^\//','',$this->cfgSambaRoot.'/'.$path)));
 
     $this->GetCachedAuth();
@@ -321,6 +321,7 @@ function _($str)
  */
 function DumpFile($file='', $name='', $isAttachment=false, $isCacheable=false, $setMimeType=null)
 {
+
     if ($name == '') $name = basename($file);
     $pi = pathinfo(strtolower($name));
     $mimeType = @$this->mimeTypes[@$pi['extension']];
@@ -889,7 +890,7 @@ function NewFileAction ()
 function ClamAV ($file)
 {
     $out = preg_split('/\n/',`clamscan $file`);
-    if (preg_match('/^'.$file.': (.*) FOUND$/', $out[0], $regs)) {
+    if (preg_match('/^'.preg_quote($file, '/').': (.*) FOUND$/', $out[0], $regs)) {
         $this->status = 'VIRUS: '.$regs[1];
         return true;
     } else {
@@ -1100,9 +1101,10 @@ function Go ($path = '')
     }
     $this->path = join('/', $ap);
     $this->type = $this->types[(count($a) > 3) ? 3 : count($a)];
-    $this->name = basename($path);
+    $this->name = basename($path); // bug fix - does not cope with paths with spaces - 2011071800	
     $this->parent = $this->_DirectoryName($this->path);
     $this->fullPath = $path;
+		
 }
 
 function Browse ($order='NA')
@@ -1244,10 +1246,13 @@ function _MasterOf ($workgroup)
 function _Get ()
 {
     $this->_SmbClient('dir "'.$this->name.'"', $this->parent);
+		
+	
     if ($this->status == '') {
         $this->type = 'file';
         $this->size = $this->files[$this->name]['size'];
         $this->time = $this->files[$this->name]['time'];
+		
         if (! $this->cfgCachePath) {
             $this->DumpFile('', $this->name, $this->cfgForceDownloads); // GT MOD 2008-06-19, added $this->cfgForceDownloads parameter
             $this->_SmbClient('get "'.$this->name.'" - "', $this->parent, '', true);
@@ -1269,8 +1274,14 @@ function SendMessage ($server, $message)
     $this->_SmbClient ('message', $server, $message);
 }
 
+function _escapeshellarg($arg){
+
+}
+
 function _SmbClient ($command='', $path='', $message='', $dumpFile=false)
+
 {
+       
     $this->status = '';
     if ($command == '') {
         $smbcmd = "-L ".escapeshellarg($path);
@@ -1280,9 +1291,23 @@ function _SmbClient ($command='', $path='', $message='', $dumpFile=false)
         $smbcmd = escapeshellarg("//{$this->server}/{$this->share}").
             " -Tqc - ".escapeshellarg($path);
     } else {
-        $smbcmd = escapeshellarg("//{$this->server}/{$this->share}").
-            " -c ".escapeshellarg($command);
-        if ($path <> '') $smbcmd .= ' -D '.escapeshellarg($path);
+        // GT 2001081000
+        // Issues with windows getting files
+        // The escapeshellarg command cannot be used with windows and smbclient when getting files because it will use double quotes instead of single quotes
+        // I have replaced escapeshellarg with str_replace("'","\'",$command);
+        // For windows hosted Moodles this could be a security risk!!!!
+        // Linux / *nix hosted Moodles DO NOT have this potential risk as escapeshellarg is still used for commands
+        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+            // Fix windows get command
+            $smbcmd = escapeshellarg("//{$this->server}/{$this->share}").
+                " -c '".str_replace("'", "\'",$command)."'";
+            if ($path <> '') $smbcmd .= ' -D '.escapeshellarg($path);
+        } else {
+            // Original linux command
+            $smbcmd = escapeshellarg("//{$this->server}/{$this->share}").
+                " -c ".escapeshellarg($command);
+            if ($path <> '') $smbcmd .= ' -D '.escapeshellarg($path);
+        }
     }
     $options = ' -d 0 ';
     if ($command <> '') {
@@ -1350,6 +1375,7 @@ function _SmbClient ($command='', $path='', $message='', $dumpFile=false)
 function _ParseSmbClient ($cmdline, $dumpFile=false, $attempt=0)
 {
     $sec_cmdline = str_replace($this->pw, '****', $cmdline);
+
     if (! $dumpFile) {
         $output = shell_exec($cmdline);
         $debug_command = ($this->debug > 1) ? "\n[smbclient]\n{$output}\n[/smbclient]" : "";
@@ -1476,6 +1502,7 @@ function _RetryParse ($cmdline, $dumpFile, $attempt){
     $attempt++;
 
     if ($attempt>1){
+        $this->files['You dont have permission to view this folder'] = array('type' => 'file', 'date' => '');
         return; // only retry parse on first attempt
     }
 

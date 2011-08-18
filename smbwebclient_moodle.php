@@ -14,7 +14,10 @@ include('config_smb_web_client.php'); // config for this block only
 include('class_smbwebclient.php');
 include('class_smbwebclient_moodle.php');
 
-require_login();
+$PAGE->set_context(get_context_instance(CONTEXT_SYSTEM));
+$PAGE->set_url('/blocks/smb_web_client/smbwebclient_moodle.php');
+
+require_login($SITE);
 
 if (!confirm_sesskey()) {
     error("Error - No session key");
@@ -29,7 +32,7 @@ if (!$site = get_site()) {
 
 $swc = new smbwebclient_moodle;
 if ($swc->criticalError){
-    print_header("$site->shortname: Error", $site->fullname,
+    echo $OUTPUT->header("$site->shortname: Error", $site->fullname,
      "Nework Home Directory");
     echo ("<h1>Sorry, you cannot view your homedirectory online</h1>");
     echo ("<p>Error Message: $swc->criticalError</p>");
