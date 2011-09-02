@@ -221,7 +221,7 @@ class block_smb_web_client extends block_base {
                                 }
 
                                 // Check capabilities
-                                if ($ci && ($COURSE->id==$courseid || has_capability('moodle/course:enrolled', $ci))){
+                                if ($ci && ($COURSE->id==$courseid || has_capability('moodle/course:view', $ci))){
 
                                     // Add share to content
                                     $this->addshare($share_key, $share_arr);
