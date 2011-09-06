@@ -151,7 +151,7 @@ class smbwebclient_moodle extends smbwebclient {
 
             // get user ldap object
         	$ldapObj=$this->_getldap_entry($USER->username);
-                if (array_search($smb_cfg->cfgLdapStaffDn, $ldapObj[0]['memberOf'])) {
+                if (in_array($smb_cfg->cfgLdapStaffDn, $ldapObj[0]['memberOf'])) {
                     $this->cfgSambaRoot = $smb_cfg->cfgStaffHomeRoot.$USER->username;
                 } else {
                     $this->cfgSambaRoot = $smb_cfg->cfgStudentHomeRoot.$USER->username;
