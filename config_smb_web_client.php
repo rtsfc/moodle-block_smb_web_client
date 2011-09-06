@@ -70,6 +70,11 @@ $smb_cfg->cfgWinShares=array(
         'title'=>'MIS (P:\)',
         'courses'=>array(2422)
     ),
+    'Q'=>array(
+        'share'=>'//fs1/Finance',
+        'title'=>'Finance (Q:\)',
+        'courses'=>array(2437)
+    ),
     'Z'=>array(
         'share'=>'//fs1/old servers/srv-admin06/Users/Public',
         'title'=>'Old Data (Z:\)',
