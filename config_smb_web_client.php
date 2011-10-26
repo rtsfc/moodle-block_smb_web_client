@@ -52,7 +52,7 @@ $smb_cfg->cfgWinShareToSmb=array(
 // populate this as in example above
 $smb_cfg->cfgWinShares=array(
     'I'=>array(
-        'share'=>'//fs1/Curriculum', // windows share
+        'share'=>'//fs2/curriculum', // windows share
         'title'=>'Curriculum (I:\)' // title of share in block
     ),
     'G'=>array(
