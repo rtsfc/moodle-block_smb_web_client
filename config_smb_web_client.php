@@ -119,13 +119,13 @@ $smb_cfg->cfgCachePath = false;
 # This script try to set language from web browser. If browser
 # language is not supported you can set a default language.
 
-$smb_cfg->cfgDefaultLanguage = 'en';
+$smb_cfg->cfgDefaultLanguage = 'en_GB';
 
 
 ###################################################################
 # Default charset (as suggested by Norbert Malecki)
 
-$smb_cfg->cfgDefaultCharset = 'ISO-8859-1';
+$smb_cfg->cfgDefaultCharset = 'UTF-8';
 
 
 ###################################################################
