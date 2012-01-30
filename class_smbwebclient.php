@@ -1376,6 +1376,10 @@ function _ParseSmbClient ($cmdline, $dumpFile=false, $attempt=0)
 {
     $sec_cmdline = str_replace($this->pw, '****', $cmdline);
 
+    $locale = $this->cfgDefaultLanguage.'.'.$this->cfgDefaultCharset;
+    setlocale(LC_ALL, $locale);
+    putenv('LC_ALL='.$locale);
+
     if (! $dumpFile) {
         $output = shell_exec($cmdline);
         $debug_command = ($this->debug > 1) ? "\n[smbclient]\n{$output}\n[/smbclient]" : "";
