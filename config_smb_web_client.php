@@ -20,11 +20,11 @@ $smb_cfg->cfgUserPrefix='tauntons\\\\'; // try this commented out first!
 
 $smb_cfg->cfgWinShareToSmb=array(
 
-'\\servername'=>'MyDomain.local/servername',
 
 //    '\\127.0.0.1'=>'WORKGROUP/127.0.0.1',
 //	'\\10.0.0.61'=>'GUY-LAPTOP/10.0.0.61',
 //	'\\192.168.40.3'=>'GUY-LAPTOP/192.168.40.3'
+
 );
 
 
